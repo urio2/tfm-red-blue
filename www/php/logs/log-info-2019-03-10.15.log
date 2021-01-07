@@ -1,0 +1,6 @@
+2019-03-10 15:06:01,603 [login] Login Success
+2019-03-10 15:12:45,456 [login] Login Success user: 'eliasml'
+2019-03-10 15:13:37,792 [login] Login Error user: 'kklaaca'
+2019-03-10 15:15:32,157 [login] Login Error user: 'kklaaca'
+2019-03-10 15:15:38,537 [login] Login Error user: 'dafadf'
+2019-03-10 15:21:14,240 [register] Set user session -> 'eliasml4'

@@ -1,0 +1,527 @@
+$(document).ready(function(){
+    $('#navBarContainer').load("html/navBar.html");
+    $('#footerContainer').load("html/footer.html");
+});
+
+
+function inactividad(){
+    window.location.href = "../php/closeSesion.php";
+}
+var t = null;
+
+function inact(){
+   t = setTimeout("inactividad()", 300000);
+}
+
+window.onblur= window.onmousemove=function(){
+    if(t) clearTimeout(t);
+    inact();
+}
+
+function login(){
+    var usr = $("#userLogin").val();
+    var pass = $("#passLogin").val();
+    var encript_pass = encript(pass);
+    $.ajax({
+        type: 'POST',
+        url: 'php/login.php',
+        data: {'user': usr, 'pass': encript_pass},
+        dataType: 'json',
+        success: function(data){
+            
+            if (data == -1) {
+	    	 $("#errorLoginMsg")[0].textContent = 'Usuario y/o contraseña incorrectos';
+            }
+	    else {
+               var pieces = data.split("|");
+ 		sessionStorage.setItem("token", pieces[1]);
+		window.location.href = "shop.html";
+	    } 
+	    // if (data == 'ok') {
+            //    window.location.href = "shop.html"
+            //} else {
+            //    $("#errorLoginMsg")[0].textContent = 'Usuario y/o contraseña incorrectos';
+            //}
+        }
+    });
+}
+
+function encript(msg) {
+
+    function rotate_left(n, s) {
+
+        var t4 = (n << s) | (n >>> (32 - s));
+
+        return t4;
+    };
+
+    function lsb_hex(val) {
+
+        var str = "";
+
+        var i;
+
+        var vh;
+
+        var vl;
+
+        for (i = 0; i <= 6; i += 2) {
+
+            vh = (val >>> (i * 4 + 4)) & 0x0f;
+
+            vl = (val >>> (i * 4)) & 0x0f;
+
+            str += vh.toString(16) + vl.toString(16);
+
+        }
+
+        return str;
+
+    };
+    function cvt_hex(val) {
+
+        var str = "";
+
+        var i;
+
+        var v;
+
+        for (i = 7; i >= 0; i--) {
+
+            v = (val >>> (i * 4)) & 0x0f;
+
+            str += v.toString(16);
+
+        }
+
+        return str;
+
+    };
+
+
+    function Utf8Encode(string) {
+
+        string = string.replace(/\r\n/g, "\n");
+
+        var utftext = "";
+
+        for (var n = 0; n < string.length; n++) {
+
+            var c = string.charCodeAt(n);
+
+            if (c < 128) {
+
+                utftext += String.fromCharCode(c);
+
+            }
+            else if ((c > 127) && (c < 2048)) {
+
+                utftext += String.fromCharCode((c >> 6) | 192);
+
+                utftext += String.fromCharCode((c & 63) | 128);
+
+            }
+            else {
+
+                utftext += String.fromCharCode((c >> 12) | 224);
+
+                utftext += String.fromCharCode(((c >> 6) & 63) | 128);
+
+                utftext += String.fromCharCode((c & 63) | 128);
+
+            }
+
+        }
+        return utftext;
+
+    };
+
+    var blockstart;
+
+    var i, j;
+
+    var W = new Array(80);
+
+    var H0 = 0x67452301;
+
+    var H1 = 0xEFCDAB89;
+
+    var H2 = 0x98BADCFE;
+
+    var H3 = 0x10325476;
+
+    var H4 = 0xC3D2E1F0;
+
+    var A, B, C, D, E;
+
+    var temp;
+
+    msg = Utf8Encode(msg);
+
+    var msg_len = msg.length;
+
+
+    var word_array = new Array();
+
+    for (i = 0; i < msg_len - 3; i += 4) {
+
+        j = msg.charCodeAt(i) << 24 | msg.charCodeAt(i + 1) << 16 |
+
+            msg.charCodeAt(i + 2) << 8 | msg.charCodeAt(i + 3);
+
+        word_array.push(j);
+
+    }
+
+    switch (msg_len % 4) {
+
+        case 0:
+
+            i = 0x080000000;
+
+            break;
+
+        case 1:
+
+            i = msg.charCodeAt(msg_len - 1) << 24 | 0x0800000;
+
+            break;
+
+        case 2:
+            i = msg.charCodeAt(msg_len - 2) << 24 | msg.charCodeAt(msg_len - 1) << 16 | 0x08000;
+
+            break;
+
+        case 3:
+
+            i = msg.charCodeAt(msg_len - 3) << 24 | msg.charCodeAt(msg_len - 2) << 16 | msg.charCodeAt(msg_len - 1) << 8 | 0x80;
+
+            break;
+
+    }
+    word_array.push(i);
+
+    while ((word_array.length % 16) != 14) word_array.push(0);
+
+    word_array.push(msg_len >>> 29);
+
+    word_array.push((msg_len << 3) & 0x0ffffffff);
+
+    for (blockstart = 0; blockstart < word_array.length; blockstart += 16) {
+        for (i = 0; i < 16; i++) W[i] = word_array[blockstart + i];
+        for (i = 16; i <= 79; i++) W[i] = rotate_left(W[i - 3] ^ W[i - 8] ^ W[i - 14] ^ W[i - 16], 1);
+        A = H0;
+        B = H1;
+        C = H2;
+        D = H3;
+        E = H4;
+        for (i = 0; i <= 19; i++) {
+            temp = (rotate_left(A, 5) + ((B & C) | (~B & D)) + E + W[i] + 0x5A827999) & 0x0ffffffff;
+            E = D;
+            D = C;
+            C = rotate_left(B, 30);
+            B = A;
+            A = temp;
+        }
+
+        for (i = 20; i <= 39; i++) {
+            temp = (rotate_left(A, 5) + (B ^ C ^ D) + E + W[i] + 0x6ED9EBA1) & 0x0ffffffff;
+            E = D;
+            D = C;
+            C = rotate_left(B, 30);
+            B = A;
+            A = temp;
+        }
+        for (i = 40; i <= 59; i++) {
+
+            temp = (rotate_left(A, 5) + ((B & C) | (B & D) | (C & D)) + E + W[i] + 0x8F1BBCDC) & 0x0ffffffff;
+            E = D;
+            D = C;
+            C = rotate_left(B, 30);
+            B = A;
+            A = temp;
+        }
+        for (i = 60; i <= 79; i++) {
+            temp = (rotate_left(A, 5) + (B ^ C ^ D) + E + W[i] + 0xCA62C1D6) & 0x0ffffffff;
+            E = D;
+            D = C;
+            C = rotate_left(B, 30);
+            B = A;
+            A = temp;
+        }
+        H0 = (H0 + A) & 0x0ffffffff;
+
+        H1 = (H1 + B) & 0x0ffffffff;
+
+        H2 = (H2 + C) & 0x0ffffffff;
+
+        H3 = (H3 + D) & 0x0ffffffff;
+
+        H4 = (H4 + E) & 0x0ffffffff;
+    }
+    var temp = cvt_hex(H0) + cvt_hex(H1) + cvt_hex(H2) + cvt_hex(H3) + cvt_hex(H4);
+    return temp.toLowerCase();
+}
+
+function check(regexp){
+    if (regexp.length != 16) {
+        // no dejamos registrar al usuario
+        return false;
+    } 
+    else if (isNaN(regexp)) {
+        // no dejamos registrar al usuario
+        return false;
+    }
+    return true;
+}
+
+function register(){
+    var usr = $("#userRegister").val();
+    var pass1 = $("#passRegister").val();
+    var creditCard = $("#creditCardRegister").val();
+
+    var str1 = "$";
+    var str2 = "*";
+    var str3 = "/";
+    var str4 = ">";
+    var str5 = "<";
+    var str6 = "=";
+    if (usr.includes(str1) || usr.includes(str2)|| usr.includes(str3)|| usr.includes(str4) || usr.includes(str5)|| usr.includes(str6) || pass1.includes(str1) || pass1.includes(str2) || pass1.includes(str3)|| pass1.includes(str4) || pass1.includes(str5) || pass1.includes(str6)) {
+        $("#errorRegisterMsg")[0].textContent = 'Usuario o password contiene carácteres no permitidos.';
+    }
+    else if(usr.length < 8 || pass1.length < 8 || (!isNaN(usr)) || (!isNaN(pass1))){
+       $("#errorRegisterMsg")[0].textContent = 'Usuario o password con formato incorrecto.';
+    }
+    else {
+	var pass = encript($("#passRegister").val());
+        if(check(creditCard)){
+            
+             // le dejamos registrar
+            $.ajax({
+                type: 'POST',
+                url: 'php/register.php',
+                data: {'user': usr, 'pass': pass, 'creditCard': encript(creditCard)},
+                dataType: 'json',
+                success: function(data){
+                    if (data == 'ok') {
+                        window.location.href = "shop.html"
+                    } else {
+                        $("#errorRegisterMsg")[0].textContent = 'Este usuario ya existe, pruebe otro.';
+                    }
+
+                }
+            });
+        } else {
+            $("#errorRegisterMsg")[0].textContent = 'Formato de tarjeta de crédito incorrecto.';
+        }
+    }
+}
+
+function goToShop() {
+    window.location.href = "shop.html"
+}
+
+
+(function ($) {
+    "use strict";
+
+    /*[ Load page ]
+    ===========================================================*/
+    $(".animsition").animsition({
+        inClass: 'fade-in',
+        outClass: 'fade-out',
+        inDuration: 1500,
+        outDuration: 800,
+        linkElement: '.animsition-link',
+        loading: true,
+        loadingParentElement: 'html',
+        loadingClass: 'animsition-loading-1',
+        loadingInner: '<div data-loader="ball-scale"></div>',
+        timeout: false,
+        timeoutCountdown: 5000,
+        onLoadEvent: true,
+        browser: [ 'animation-duration', '-webkit-animation-duration'],
+        overlay : false,
+        overlayClass : 'animsition-overlay-slide',
+        overlayParentElement : 'html',
+        transition: function(url){ window.location.href = url; }
+    });
+    
+    /*[ Back to top ]
+    ===========================================================*/
+    var windowH = $(window).height()/2;
+
+    $(window).on('scroll',function(){
+        if ($(this).scrollTop() > windowH) {
+            $("#myBtn").css('display','flex');
+        } else {
+            $("#myBtn").css('display','none');
+        }
+    });
+
+    $('#myBtn').on("click", function(){
+        $('html, body').animate({scrollTop: 0}, 300);
+    });
+
+
+    /*[ Show header dropdown ]
+    ===========================================================*/
+    $('.js-show-header-dropdown').on('click', function(){
+        $(this).parent().find('.header-dropdown')
+    });
+
+    var menu = $('.js-show-header-dropdown');
+    var sub_menu_is_showed = -1;
+
+    for(var i=0; i<menu.length; i++){
+        $(menu[i]).on('click', function(){ 
+            
+                if(jQuery.inArray( this, menu ) == sub_menu_is_showed){
+                    $(this).parent().find('.header-dropdown').toggleClass('show-header-dropdown');
+                    sub_menu_is_showed = -1;
+                }
+                else {
+                    for (var i = 0; i < menu.length; i++) {
+                        $(menu[i]).parent().find('.header-dropdown').removeClass("show-header-dropdown");
+                    }
+
+                    $(this).parent().find('.header-dropdown').toggleClass('show-header-dropdown');
+                    sub_menu_is_showed = jQuery.inArray( this, menu );
+                }
+        });
+    }
+
+    $(".js-show-header-dropdown, .header-dropdown").click(function(event){
+        event.stopPropagation();
+    });
+
+    $(window).on("click", function(){
+        for (var i = 0; i < menu.length; i++) {
+            $(menu[i]).parent().find('.header-dropdown').removeClass("show-header-dropdown");
+        }
+        sub_menu_is_showed = -1;
+    });
+
+
+     /*[ Fixed Header ]
+    ===========================================================*/
+    var posWrapHeader = $('.topbar').height();
+    var header = $('.container-menu-header');
+
+    $(window).on('scroll',function(){
+
+        if($(this).scrollTop() >= posWrapHeader) {
+            $('.header1').addClass('fixed-header');
+            $(header).css('top',-posWrapHeader); 
+
+        }  
+        else {
+            var x = - $(this).scrollTop(); 
+            $(header).css('top',x); 
+            $('.header1').removeClass('fixed-header');
+        } 
+
+        if($(this).scrollTop() >= 200 && $(window).width() > 992) {
+            $('.fixed-header2').addClass('show-fixed-header2');
+            $('.header2').css('visibility','hidden'); 
+            $('.header2').find('.header-dropdown').removeClass("show-header-dropdown");
+            
+        }  
+        else {
+            $('.fixed-header2').removeClass('show-fixed-header2');
+            $('.header2').css('visibility','visible'); 
+            $('.fixed-header2').find('.header-dropdown').removeClass("show-header-dropdown");
+        } 
+
+    });
+    
+    /*[ Show menu mobile ]
+    ===========================================================*/
+    $('.btn-show-menu-mobile').on('click', function(){
+        $(this).toggleClass('is-active');
+        $('.wrap-side-menu').slideToggle();
+    });
+
+    var arrowMainMenu = $('.arrow-main-menu');
+
+    for(var i=0; i<arrowMainMenu.length; i++){
+        $(arrowMainMenu[i]).on('click', function(){
+            $(this).parent().find('.sub-menu').slideToggle();
+            $(this).toggleClass('turn-arrow');
+        })
+    }
+
+    $(window).resize(function(){
+        if($(window).width() >= 992){
+            if($('.wrap-side-menu').css('display') == 'block'){
+                $('.wrap-side-menu').css('display','none');
+                $('.btn-show-menu-mobile').toggleClass('is-active');
+            }
+            if($('.sub-menu').css('display') == 'block'){
+                $('.sub-menu').css('display','none');
+                $('.arrow-main-menu').removeClass('turn-arrow');
+            }
+        }
+    });
+
+
+    /*[ remove top noti ]
+    ===========================================================*/
+    $('.btn-romove-top-noti').on('click', function(){
+        $(this).parent().remove();
+    })
+
+
+    /*[ Block2 button wishlist ]
+    ===========================================================*/
+    $('.block2-btn-addwishlist').on('click', function(e){
+        e.preventDefault();
+        $(this).addClass('block2-btn-towishlist');
+        $(this).removeClass('block2-btn-addwishlist');
+        $(this).off('click');
+    });
+
+    /*[ +/- num product ]
+    ===========================================================*/
+    $('.btn-num-product-down').on('click', function(e){
+        e.preventDefault();
+        var numProduct = Number($(this).next().val());
+        if(numProduct > 1) $(this).next().val(numProduct - 1);
+    });
+
+    $('.btn-num-product-up').on('click', function(e){
+        e.preventDefault();
+        var numProduct = Number($(this).prev().val());
+        $(this).prev().val(numProduct + 1);
+    });
+
+
+    /*[ Show content Product detail ]
+    ===========================================================*/
+    $('.active-dropdown-content .js-toggle-dropdown-content').toggleClass('show-dropdown-content');
+    $('.active-dropdown-content .dropdown-content').slideToggle('fast');
+
+    $('.js-toggle-dropdown-content').on('click', function(){
+        $(this).toggleClass('show-dropdown-content');
+        $(this).parent().find('.dropdown-content').slideToggle('fast');
+    });
+
+
+    /*[ Play video 01]
+    ===========================================================*/
+    var srcOld = $('.video-mo-01').children('iframe').attr('src');
+
+    $('[data-target="#modal-video-01"]').on('click',function(){
+        $('.video-mo-01').children('iframe')[0].src += "&autoplay=1";
+
+        setTimeout(function(){
+            $('.video-mo-01').css('opacity','1');
+        },300);      
+    });
+
+    $('[data-dismiss="modal"]').on('click',function(){
+        $('.video-mo-01').children('iframe')[0].src = srcOld;
+        $('.video-mo-01').css('opacity','0');
+    });
+
+})(jQuery);

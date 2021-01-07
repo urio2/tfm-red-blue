@@ -1,0 +1,37 @@
+<configuration xmlns="http://logging.apache.org/log4php/">
+    <appender name="myConsoleAppender" class="LoggerAppenderConsole" />
+
+     <appender name="errorDef" class="LoggerAppenderDailyFile" threshold="error">
+       <param name="append" value="true"/>
+        <layout class="LoggerLayoutPattern">
+           <param name="conversionPattern" value="%date{Y-m-d H:i:s,u} [%logger] %message%newline" />
+        </layout>       
+        <param name="file" value="logs/log-error-%s.log" />
+        <param name="datePattern" value="Y-m-d.H" />       
+    </appender>
+   
+    <appender name="debugDef" class="LoggerAppenderDailyFile" threshold="debug">
+       <param name="append" value="true"/>
+        <layout class="LoggerLayoutPattern">
+           <param name="conversionPattern" value="%date{Y-m-d H:i:s,u} [%logger] %message%newline" />
+        </layout>       
+        <param name="file" value="logs/log-debug-%s.log" />
+        <param name="datePattern" value="Y-m-d.H" />       
+    </appender>
+
+    <appender name="infoDef" class="LoggerAppenderDailyFile" threshold="info">
+       <param name="append" value="true"/>
+        <layout class="LoggerLayoutPattern">
+           <param name="conversionPattern" value="%date{Y-m-d H:i:s,u} [%logger] %message%newline" />
+        </layout>       
+        <param name="file" value="logs/log-info-%s.log" />
+        <param name="datePattern" value="Y-m-d.H" />       
+    </appender>
+
+
+    <root>
+         <appender_ref ref="errorDef" />
+         <appender_ref ref="debugDef" />
+         <appender_ref ref="infoDef" />
+    </root>
+</configuration>

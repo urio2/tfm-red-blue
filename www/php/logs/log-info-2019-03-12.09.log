@@ -1,0 +1,4 @@
+2019-03-12 09:39:46,844 [login] Login Success user: 'hola'
+2019-03-12 09:50:16,739 [login] Login Error user: 'prueba'
+2019-03-12 09:50:30,739 [register] user 'prueb' registered
+2019-03-12 09:50:48,090 [register] user 'hacked' registered
